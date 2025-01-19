@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from shared.utility import send_email
 from .models import User, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
-from .serializers import SignUpSerializer, ChangeUserInformation
+from .serializers import SignUpSerializer, ChangeUserInformation, ChangeUserPhotoSerializer
 
 
 class CreateUserView(CreateAPIView):
@@ -18,7 +18,7 @@ class CreateUserView(CreateAPIView):
 
 
 class VerifyAPIView(APIView):
-    permission_classes = (IsAuthenticated, )
+    permission_classes = (IsAuthenticated,)
 
     def post(self, request, *args, **kwargs):
         user = self.request.user
@@ -63,7 +63,7 @@ class GetNewVerification(APIView):
             send_email(user.phone_number, code)
         else:
             data = {
-                "message": "Email yoki tel nomer notogri "
+                "message": "Email yoki tel nomer noto'gri "
             }
             raise ValidationError(data)
         return Response(
@@ -74,7 +74,7 @@ class GetNewVerification(APIView):
         )
 
     @staticmethod
-    def check_verification(user, code):
+    def check_verification(user):
         verifies = user.verify_codes.filter(expiration_time__gte=datetime.now(), is_confirmed=False)
         if verifies.exists():
             data = {
@@ -87,7 +87,6 @@ class ChangeUserInformationView(UpdateAPIView):
     permission_classes = (IsAuthenticated,)
     serializer_class = ChangeUserInformation
     http_method_names = ['put', 'patch']
-
 
     def get_object(self):
         return self.request.user
@@ -109,3 +108,18 @@ class ChangeUserInformationView(UpdateAPIView):
             "auth_status": self.request.user.auth_status,
         }
         return Response(data, status=200)
+
+
+class ChangeUserPhotoView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def put(self, request, *args, **kwargs):
+        serializer = ChangeUserPhotoSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            serializer.update(user, serializer.validated_data)
+            print(user.photo)
+            return Response({
+                "message": "Rasm muvafaqiyatli o'zgartirildi!"
+            }, status=200)
+        return Response(serializer.errors, status=400)

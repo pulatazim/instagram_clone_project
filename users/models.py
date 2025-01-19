@@ -9,7 +9,7 @@ from shared.models import BaseModel
 
 ORDINARY_USER, MANAGER, ADMIN = ('ordinary_user', 'manager', 'admin')
 VIA_EMAIL, VIA_PHONE = ('via_email', 'via_phone')
-NEW, CODE_VERIFIED, DONE, PHOTO_STEP = ('new', 'code_verified', 'done', 'photo_step')
+NEW, CODE_VERIFIED, DONE, PHOTO_DONE  = ('new', 'code_verified', 'done', 'photo_done')
 
 
 class User(AbstractUser, BaseModel):
@@ -26,7 +26,7 @@ class User(AbstractUser, BaseModel):
         (NEW, NEW),
         (CODE_VERIFIED, CODE_VERIFIED),
         (DONE, DONE),
-        (PHOTO_STEP, PHOTO_STEP)
+        (PHOTO_DONE, PHOTO_DONE)
     )
 
     user_roles = models.CharField(max_length=31, choices=USER_ROLES, default=ORDINARY_USER, blank=True)
@@ -34,7 +34,7 @@ class User(AbstractUser, BaseModel):
     auth_status = models.CharField(max_length=31, choices=AUTH_STATUS, default=NEW)
     email = models.EmailField(unique=True, null=True, blank=True)
     phone_number = models.CharField(max_length=15, null=True, blank=True, unique=True)
-    photo = models.ImageField(upload_to='user_photo/', null=True, blank=True,
+    photo = models.ImageField(upload_to='`user_photo/', null=True, blank=True,
                               validators=[FileExtensionValidator(['png', 'jpg', 'jpeg'])])
 
     def __str__(self):
