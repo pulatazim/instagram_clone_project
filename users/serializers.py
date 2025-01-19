@@ -1,7 +1,8 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers, exceptions
 from django.db.models import Q
 from shared.utility import check_email_or_phone, send_email, send_phone_code
-from .models import User, UserConfirmation, VIA_EMAIL, VIA_PHONE
+from .models import User, UserConfirmation, VIA_EMAIL, VIA_PHONE, CODE_VERIFIED, DONE
 from rest_framework.exceptions import ValidationError
 
 
@@ -85,3 +86,60 @@ class SignUpSerializer(serializers.ModelSerializer):
         data = super(SignUpSerializer, self).to_representation(instance)
         data.update(instance.token())
         return data
+
+
+class ChangeUserInformation(serializers.ModelSerializer):
+    first_name = serializers.CharField(write_only=True, required=True)
+    last_name = serializers.CharField(write_only=True, required=True)
+    username = serializers.CharField(write_only=True, required=True)
+    email = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'username', 'email', 'password', 'confirm_password')
+
+    def validate(self, data):
+        password = data.get('password', None)
+        confirm_password = data.get('confirm_password', None)
+        if password != confirm_password:
+            raise ValidationError(
+                {
+                    "message": "Parollaringiz bir biriga mos kelmadi!"
+                }
+            )
+        if password:
+            validate_password(password)
+            validate_password(confirm_password)
+
+        return data
+
+    @staticmethod
+    def validate_username(username):
+        if len(username) < 5 or len(username) > 35:
+            raise ValidationError(
+                {
+                    "message": "Username 5 ta dan kam va 35 datan kop bolmasligi kerak"
+                }
+            )
+
+        if username.isdigit():
+            raise ValidationError(
+                {
+                    "mesage": "Username faqatgina raqamdan iborat bo'lishi mukin emas"
+                }
+            )
+        return username
+
+    def update(self, instance, validated_data):
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
+        instance.password = validated_data.get('password', instance.password)
+        instance.username = validated_data.get('username', instance.username)
+
+        if validated_data.get('password'):
+            instance.set_password(validated_data.get('password'))
+        if instance.auth_status == CODE_VERIFIED:
+            instance.auth_status = DONE
+        instance.save()
+        return instance
