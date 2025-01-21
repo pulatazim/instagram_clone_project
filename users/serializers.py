@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from shared.utility import check_email_or_phone, send_email, send_phone_code, check_user_type
 from .models import User, UserConfirmation, VIA_EMAIL, VIA_PHONE, CODE_VERIFIED, DONE, NEW, PHOTO_DONE
-from rest_framework.exceptions import ValidationError, PermissionDenied
+from rest_framework.exceptions import ValidationError, PermissionDenied, NotFound
 
 
 class SignUpSerializer(serializers.ModelSerializer):
@@ -241,3 +241,48 @@ class LoginRefreshSerializer(TokenRefreshSerializer):
 
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email_or_phone = serializers.CharField(write_only=True, required=True)
+
+    def validate(self, attrs):
+        email_or_phone = attrs.get('email_or_phone', None)
+        if email_or_phone is None:
+            raise ValidationError({
+                "success": False,
+                "message": "Email yoki teleefon raqami kiritilishi shart!"
+            })
+        user = User.objects.filter(Q(phone_number=email_or_phone) | Q(email=email_or_phone))
+        if not user.exists():
+            raise NotFound(detail="User topilmadi")
+        attrs['user'] = user.first()
+        return attrs
+
+
+
+class ResetPasswordSerializer(serializers.ModelSerializer):
+    id = serializers.UUIDField(read_only=True)
+    password = serializers.CharField(min_length=8, write_only=True, required=True)
+    confirm_password = serializers.CharField(min_length=8, write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'password', 'confirm_password')
+
+    def validate(self, attrs):
+        password = attrs.get('password', None)
+        confirm_password = attrs.get('confirm_password', None)
+        if password != confirm_password:
+            raise ValidationError({
+                "success": False,
+                "message": "Parollaringiz bir-biriga teng emas!"
+            })
+        if password:
+            validate_password(password)
+            return attrs
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop('password')
+        instance.set_password(password)
+        return super(ResetPasswordSerializer, self).update(instance, validated_data)
