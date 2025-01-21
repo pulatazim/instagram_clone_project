@@ -5,10 +5,14 @@ from rest_framework.generics import CreateAPIView, UpdateAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from shared.utility import send_email
 from .models import User, CODE_VERIFIED, NEW, VIA_EMAIL, VIA_PHONE
-from .serializers import SignUpSerializer, ChangeUserInformation, ChangeUserPhotoSerializer
+from .serializers import (SignUpSerializer, ChangeUserInformation, ChangeUserPhotoSerializer, LoginSerializer,
+                          LoginRefreshSerializer, LogoutSerializer)
 
 
 class CreateUserView(CreateAPIView):
@@ -123,3 +127,31 @@ class ChangeUserPhotoView(APIView):
                 "message": "Rasm muvafaqiyatli o'zgartirildi!"
             }, status=200)
         return Response(serializer.errors, status=400)
+
+
+class LoginView(TokenObtainPairView):
+    serializer_class = LoginSerializer
+
+
+class LoginRefreshView(TokenRefreshView):
+    serializer_class = LoginRefreshSerializer
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated, ]
+    serializer_class = LogoutSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data)
+        try:
+            refresh_token = self.request.data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            data = {
+                "success": True,
+                'message': "Siz saytdan chiqib ketdingiz!"
+            }
+            return Response(data, status=205)
+        except TokenError:
+            return Response(status=400)
+

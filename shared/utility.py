@@ -9,9 +9,7 @@ from twilio.rest import Client
 
 email_regex = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b')
 phone_regex = re.compile(r'(\+[0-9]+\s*)?(\([0-9]+\))?[\s0-9\-]+[0-9]+')
-# phone_regex = re.compile(r"(?:([+]\d{1,4})[-.\s]?)?(?:[(](\d{1,3})[)][-.\s]?)?(\d{1,4})[-.\s]?(\d{1,4})[-.\s]?(\d{1,9})")
-
-# account_sid = config("ACCOUNT_SID")
+username_regex = re.compile(r'^[A-Za-z0-9.-_]+$')
 
 def check_email_or_phone(email_or_phone):
     # print(email_or_phone)
@@ -33,6 +31,23 @@ def check_email_or_phone(email_or_phone):
         }
         raise ValidationError(data)
     return email_or_phone
+
+def check_user_type(user_input):
+    if re.fullmatch(email_regex, user_input):
+        user_input = 'email'
+    elif re.fullmatch(phone_regex, user_input):
+        user_input = 'phone'
+    elif re.fullmatch(username_regex, user_input):
+        user_input = 'username'
+    else:
+        data = {
+            "success": False,
+            "message": "Username, Email yoki telefonraqamingiz noto'gri"
+        }
+        raise ValidationError(data)
+    return user_input
+
+
 
 class EmailThread(threading.Thread):
     """ Thread class to send emails """
