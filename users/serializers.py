@@ -260,7 +260,6 @@ class ForgotPasswordSerializer(serializers.Serializer):
         return attrs
 
 
-
 class ResetPasswordSerializer(serializers.ModelSerializer):
     id = serializers.UUIDField(read_only=True)
     password = serializers.CharField(min_length=8, write_only=True, required=True)

@@ -104,15 +104,6 @@ class ChangeUserInformationView(UpdateAPIView):
         }
         return Response(data, status=200)
 
-    def partial_update(self, request, *args, **kwargs):
-        super(ChangeUserInformationView, self).partial_update(request, *args, **kwargs)
-        data = {
-            "success": True,
-            "message": "User updated successfully",
-            "auth_status": self.request.user.auth_status,
-        }
-        return Response(data, status=200)
-
 
 class ChangeUserPhotoView(APIView):
     permission_classes = (IsAuthenticated,)

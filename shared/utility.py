@@ -11,6 +11,7 @@ email_regex = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
 phone_regex = re.compile(r'(\+[0-9]+\s*)?(\([0-9]+\))?[\s0-9\-]+[0-9]+')
 username_regex = re.compile(r'^[A-Za-z0-9.-_]+$')
 
+
 def check_email_or_phone(email_or_phone):
     # print(email_or_phone)
     # phone_number = phonenumbers.parse(email_or_phone)
@@ -32,6 +33,7 @@ def check_email_or_phone(email_or_phone):
         raise ValidationError(data)
     return email_or_phone
 
+
 def check_user_type(user_input):
     if re.fullmatch(email_regex, user_input):
         user_input = 'email'
@@ -48,15 +50,16 @@ def check_user_type(user_input):
     return user_input
 
 
-
 class EmailThread(threading.Thread):
     """ Thread class to send emails """
+
     def __init__(self, email):
         self.email = email
         threading.Thread.__init__(self)
 
     def run(self):
         self.email.send()
+
 
 class Email:
     @staticmethod
@@ -69,6 +72,7 @@ class Email:
         if data.get('content_type') == "html":
             email.content_subtype = 'html'
         EmailThread(email).start()
+
 
 def send_email(email, code):
     html_content = render_to_string(
@@ -83,6 +87,9 @@ def send_email(email, code):
             "content_type": "html"
         }
     )
+    print(f"Bu kodni hech kimga bermang!-{code}")
+
+
 
 def send_phone_code(phone, code):
     account_sid = config('account_sid')
