@@ -30,6 +30,8 @@ class PostSerializer(serializers.ModelSerializer):
                   'me_liked'
                   )
 
+        extra_kwargs = {"image": {"required": False}}
+
     @staticmethod
     def get_post_likes_count(obj):
         return obj.likes.count()
@@ -53,7 +55,7 @@ class PostSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostComment
-        fields = ('id', 'author', 'comment', 'parent', 'created_time', 'replies', 'me_liked', 'likes_count')
+        fields = ('id', 'author', 'comment','post' , 'parent', 'created_time', 'replies', 'me_liked', 'likes_count')
 
     def get_replies(self, obj):
         if obj.child.exists():

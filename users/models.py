@@ -6,10 +6,37 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from rest_framework_simplejwt.tokens import RefreshToken
 from shared.models import BaseModel
+from django.contrib.auth.base_user import BaseUserManager
+
 
 ORDINARY_USER, MANAGER, ADMIN = ('ordinary_user', 'manager', 'admin')
 VIA_EMAIL, VIA_PHONE = ('via_email', 'via_phone')
 NEW, CODE_VERIFIED, DONE, PHOTO_DONE = ('new', 'code_verified', 'done', 'photo_done')
+
+
+class UserManager(BaseUserManager):
+    use_in_migrations = True
+
+    def create_user(self, username, email=None, password=None, **extra_fields):
+        if not username:
+            raise ValueError('The given username must be set')
+        email = self.normalize_email(email)
+        user = self.model(username=username, email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, email=None, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(username, email, password, **extra_fields)
 
 
 class User(AbstractUser, BaseModel):
@@ -93,6 +120,8 @@ class User(AbstractUser, BaseModel):
 PHONE_EXPIRE = 2
 EMAIL_EXPIRE = 5
 
+objects = UserManager()  # bu yerga yangi manager qo‘shildi
+
 
 class UserConfirmation(BaseModel):
     TYPE_CHOICES = (
@@ -116,3 +145,8 @@ class UserConfirmation(BaseModel):
         else:
             self.expiration_time = datetime.now() + timedelta(minutes=PHONE_EXPIRE)
         super(UserConfirmation, self).save(*args, **kwargs)
+
+
+
+
+

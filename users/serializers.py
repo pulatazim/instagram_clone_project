@@ -219,7 +219,8 @@ class LoginSerializer(TokenObtainSerializer):
         data['full_name'] = self.user.full_name
         return data
 
-    def get_user(self, **kwargs):
+    @staticmethod
+    def get_user(**kwargs):
         users = User.objects.filter(**kwargs)
         if not users.exists():
             raise ValidationError({
@@ -232,7 +233,7 @@ class LoginSerializer(TokenObtainSerializer):
 class LoginRefreshSerializer(TokenRefreshSerializer):
 
     def validate(self, attrs):
-        data = super().validate(attrs)
+        attrs = super().validate(attrs)
         access_token_instance = AccessToken(data['access'])
         user_id = access_token_instance['user_id']
         user = get_object_or_404(User, id=user_id)

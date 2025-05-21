@@ -120,7 +120,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': config("DB_NAME"),
         'USER': config("USER"),
         'PASSWORD': config("PASSWORD"),
@@ -128,6 +128,7 @@ DATABASES = {
         'PORT': config("PORT"),
     }
 }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -177,3 +178,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
 Email_backend = 'django.core.mail.backends.smtp.EmailBackend'
+
+# AUTHENTICATION_BACKENDS = (
+#     'django.contrib.auth.backends.ModelBackend',
+# )
+
